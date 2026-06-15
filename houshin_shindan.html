@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>封神演義 キャラタイプ診断</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        // ── データ定義 ──────────────────────────────────────────
+
+        const questions = {
+            q1: {
+                text: "目的のためなら\n自分の本音や感情を\nいったん横に置ける？",
+                yes: "q2",
+                no: "q8",
+            },
+            q2: {
+                text: "表舞台で戦うより\n裏で盤面を動かす方が\nしっくりくる？",
+                yes: "q3",
+                no: "q5",
+            },
+            q3: {
+                text: "仲間を信じて任せ\n自分は「ここ」だけと出る\n参謀タイプ？",
+                yes: "r_shinkohyo",
+                no: "q4",
+            },
+            q4: {
+                text: "美意識×快楽×好奇心で\n世界を大胆に塗り替えたい？",
+                yes: "r_dakki",
+                no: "r_taikobou",
+            },
+            q5: {
+                text: "守ると決めた秩序や相手には\n最後まで責任を背負う？",
+                yes: "q6",
+                no: "q7",
+            },
+            q6: {
+                text: "使命のためなら\n孤独や誤解も引き受ける？",
+                yes: "r_monchu",
+                no: "r_hiko",
+            },
+            q7: {
+                text: "戦いさえも舞台にして\n華やかに魅せたい？",
+                yes: "r_chomei",
+                no: "r_genshitenzon",
+            },
+            q8: {
+                text: "人の痛みや空気の変化に\nかなり敏感？",
+                yes: "q9",
+                no: "q11",
+            },
+            q9: {
+                text: "前に出るより\nそっと支えて相手を\n安心させる？",
+                yes: "r_fugen",
+                no: "q10",
+            },
+            q10: {
+                text: "期待に応えるために\n器用に役割を切り替える？",
+                yes: "r_yojo",
+                no: "r_ryukki",
+            },
+            q11: {
+                text: "考えるより動き\n正面突破で道を開く？",
+                yes: "q12",
+                no: "q13",
+            },
+            q12: {
+                text: "権威や親に反発しても\n自分のやり方を貫く？",
+                yes: "r_nataku",
+                no: "r_koteika",
+            },
+            q13: {
+                text: "強さより日常感・素直さで\n人を動かすタイプ？",
+                yes: "r_buki",
+                no: "r_shizou",
+            },
+        };
+
+        const results = {
+            r_dakki: {
+                name: "妲己",
+                type: "妲己タイプ",
+                keywords: "魅力 × 欲望 × 変革",
+                catchcopy: "世界を遊び場にするカリスマ",
+                desc: "あなたは魅力と好奇心で周囲を惹きつける存在。枠を壊し、世界をゲームのように楽しみながら変革を起こしていく。何者にも縛られない自由さが、最大の武器。",
+                emoji: "🌹",
+                from: "#7b1e3a",
+                to: "#c0392b",
+            },
+            r_shinkohyo: {
+                name: "申公豹",
+                type: "申公豹タイプ",
+                keywords: "最強 × 野心 × 美学",
+                catchcopy: "盤面を眺める孤高の観測者",
+                desc: "あなたは全体を見渡す知性と、誰にも頼らない孤高の強さを持つ。自分の美学に従い、静かに最強を目指す。その孤独さえも、あなたの誇りになっている。",
+                emoji: "🐆",
+                from: "#3d1a6e",
+                to: "#6c3483",
+            },
+            r_taikobou: {
+                name: "太公望",
+                type: "大公望タイプ",
+                keywords: "戦略 × 気力 × 信頼",
+                catchcopy: "「出ない勇気」で勝つ軍師",
+                desc: "あなたは大局を読み、仲間を信じて任せることができる知将。目立たなくても、確かな戦略で道を切り開く。飄々としながらも、内側に熱い使命感を宿している。",
+                emoji: "🎣",
+                from: "#1a3e6e",
+                to: "#2980b9",
+            },
+            r_monchu: {
+                name: "聞仲",
+                type: "聞仲タイプ",
+                keywords: "忠義 × 使命 × 責任",
+                catchcopy: "守るもののために折れない柱",
+                desc: "あなたは信念と責任感の塊。孤独になっても、誤解されても、守ると決めたものへの忠義は揺らがない。その重厚な背中が、周囲に安心感を与える。",
+                emoji: "⚡",
+                from: "#1a252f",
+                to: "#2c3e50",
+            },
+            r_hiko: {
+                name: "飛虎",
+                type: "飛虎タイプ",
+                keywords: "誠実 × 家族愛 × 正義",
+                catchcopy: "まっすぐ人を率いる武人",
+                desc: "あなたは誠実さと家族への愛を原動力に動く人。まっすぐな正義感で仲間を率い、どんな時も人情を忘れない。その温かさが、人を動かす。",
+                emoji: "🐯",
+                from: "#7d3c0d",
+                to: "#e67e22",
+            },
+            r_chomei: {
+                name: "超公明",
+                type: "超公明タイプ",
+                keywords: "華麗 × 演出 × 自己表現",
+                catchcopy: "戦いも人生もショーにする人",
+                desc: "あなたは何事も舞台にしてしまう表現者。華やかさと美しさで周囲を魅了しながら、自分らしく輝く。人生そのものがパフォーマンスであることを知っている。",
+                emoji: "✨",
+                from: "#7d6608",
+                to: "#d4ac0d",
+            },
+            r_genshitenzon: {
+                name: "元始天尊",
+                type: "元始天尊タイプ",
+                keywords: "管理 × 大局 × 采配",
+                catchcopy: "全体を見てルールを作る司令官",
+                desc: "あなたは高い視点から全体を俯瞰し、秩序とルールで世界を設計する。感情より構造を重視し、長期的な視野で物事を動かす真の司令官型。",
+                emoji: "☁️",
+                from: "#424949",
+                to: "#717d7e",
+            },
+            r_fugen: {
+                name: "普賢真人",
+                type: "普賢真人タイプ",
+                keywords: "優しさ × 洞察 × 受容",
+                catchcopy: "静かに心を救う理解者",
+                desc: "あなたは相手の痛みを深く感じ、静かに寄り添う癒し系。言葉より存在で人を安心させる力がある。その深い共感力が、傷ついた心をそっと溶かしていく。",
+                emoji: "🌸",
+                from: "#4a235a",
+                to: "#8e44ad",
+            },
+            r_yojo: {
+                name: "楊戩",
+                type: "楊戩タイプ",
+                keywords: "器用 × 中調 × 巧勝",
+                catchcopy: "役割を演じ切る万能型",
+                desc: "あなたはあらゆる状況に適応できる万能型。求められる役割を完璧にこなしながら、静かに局面を動かす。その冷静さと技術力で、気づいたら最も頼られている存在になっている。",
+                emoji: "🌀",
+                from: "#0e6655",
+                to: "#16a085",
+            },
+            r_ryukki: {
+                name: "竜吉公主",
+                type: "竜吉公主タイプ",
+                keywords: "気品 × 自立 × 静かな強さ",
+                catchcopy: "孤高を保って凛と立つ人",
+                desc: "あなたは誰かに頼らず、自分の気品と強さで孤高に立つ人。静かな威厳が自然と周囲を引き寄せる。その内側には、燃えるような強い意志が宿っている。",
+                emoji: "👑",
+                from: "#78281f",
+                to: "#c0392b",
+            },
+            r_nataku: {
+                name: "哪吒",
+                type: "哪吒タイプ",
+                keywords: "反骨 × 純粋 × 前進",
+                catchcopy: "不器用でもまっすぐ突き進む戦士",
+                desc: "あなたは権威に屈せず、自分の信じる道をひた走る反骨の戦士。不器用でも、その純粋さと突進力が人を動かす。誰にも止められない、熱い魂の持ち主。",
+                emoji: "🔥",
+                from: "#922b21",
+                to: "#e74c3c",
+            },
+            r_koteika: {
+                name: "黄天化",
+                type: "黄天化タイプ",
+                keywords: "自由 × 仲間 × 元気肌",
+                catchcopy: "軽やかに仲間を守る突破役",
+                desc: "あなたは明るさと行動力で仲間を盛り上げる元気の源。重くなりすぎず、軽やかに前へ突き進む。その無邪気な突破力が、チームに新しい風を吹き込む。",
+                emoji: "⚡",
+                from: "#7d6608",
+                to: "#f39c12",
+            },
+            r_buki: {
+                name: "武吉",
+                type: "武吉タイプ",
+                keywords: "素直 × 日常力 × 兄貴肌",
+                catchcopy: "等身大のまま前へ進む弟子",
+                desc: "あなたは特別な力がなくても、素直さと誠実さで前へ進む。身近な人を大切にし、等身大の強さで成長し続ける。その真摯な姿が、じわじわと周囲の心を動かしていく。",
+                emoji: "🌱",
+                from: "#196f3d",
+                to: "#27ae60",
+            },
+            r_shizou: {
+                name: "四不象",
+                type: "四不象タイプ",
+                keywords: "重し × 万能 × 縁の下 × 精神力",
+                catchcopy: "場をゆるめる名サポーター",
+                desc: "あなたは縁の下の力持ち。チームの空気をゆるめ、大切な人を陰でしっかり支える精神的な柱。どんな形にもなれる柔軟さと、揺るぎない忠誠心を併せ持つ。",
+                emoji: "🦌",
+                from: "#1c2833",
+                to: "#2c3e50",
+            },
+        };
+
+        // ── メインコンポーネント ─────────────────────────────────
+
+        function HoushinShindan() {
+            const [step, setStep] = useState("start");
+            const [history, setHistory] = useState([]);
+            const [answered, setAnswered] = useState({});
+
+            const isQuestion = step.startsWith("q");
+            const isResult = step.startsWith("r_");
+            const isStart = step === "start";
+
+            const currentQ = isQuestion ? questions[step] : null;
+            const currentR = isResult ? results[step] : null;
+
+            const handleAnswer = (answer) => {
+                const nextStep = questions[step][answer];
+                setAnswered((prev) => ({ ...prev, [step]: answer }));
+                setHistory((prev) => [...prev, step]);
+                setStep(nextStep);
+            };
+
+            const handleBack = () => {
+                if (history.length === 0) return;
+                const prev = history[history.length - 1];
+                setHistory((h) => h.slice(0, -1));
+                setStep(prev);
+            };
+
+            const handleRestart = () => {
+                setStep("start");
+                setHistory([]);
+                setAnswered({});
+            };
+
+            const qNumber = isQuestion ? Object.keys(questions).indexOf(step) + 1 : null;
+            const totalQ = Object.keys(questions).length;
+
+            return (
+                <div style={styles.root}>
+                    <div style={styles.bgDecor1} />
+                    <div style={styles.bgDecor2} />
+                    <div style={styles.container}>
+                        <header style={styles.header}>
+                            <div style={styles.headerBadge}>連載開始30周年記念</div>
+                            <h1 style={styles.title}>
+                                <span style={styles.titleSub}>藤崎竜版</span>
+                                <br />
+                                封神演義
+                                <br />
+                                <span style={styles.titleMain}>キャラタイプ診断</span>
+                            </h1>
+                            <p style={styles.headerNote}>
+                                ※公式診断ではなく、ファン向け性格フローチャートです
+                            </p>
+                        </header>
+                        <main style={styles.card}>
+                            {isStart && <StartScreen onStart={() => setStep("q1")} />}
+                            {isQuestion && (
+                                <QuestionScreen
+                                    question={currentQ}
+                                    qNumber={qNumber}
+                                    totalQ={totalQ}
+                                    onAnswer={handleAnswer}
+                                    onBack={history.length > 0 ? handleBack : null}
+                                />
+                            )}
+                            {isResult && <ResultScreen result={currentR} onRestart={handleRestart} />}
+                        </main>
+                        <footer style={styles.footer}>
+                            藤崎竜「封神演義」の人物をもとにしたファン向けコンテンツです
+                        </footer>
+                    </div>
+                </div>
+            );
+        }
+
+        function StartScreen({ onStart }) {
+            return (
+                <div style={styles.startWrap}>
+                    <div style={styles.startSymbol}>⚗️</div>
+                    <h2 style={styles.startHeading}>
+                        あなたは封神演義の<br />どのキャラ？
+                    </h2>
+                    <p style={styles.startDesc}>
+                        13問の質問に「はい」か「いいえ」で答えるだけ。
+                        <br />
+                        直感で選んでね！
+                    </p>
+                    <div style={styles.startCharacters}>
+                        {["🌹", "🎣", "🔥", "🌸", "🌀", "👑"].map((e, i) => (
+                            <span
+                                key={i}
+                                style={{
+                                    ...styles.startEmoji,
+                                    animation: `float ${3 + i * 0.2}s ease-in-out infinite`,
+                                }}
+                            >
+                                {e}
+                            </span>
+                        ))}
+                    </div>
+                    <button style={styles.startBtn} onClick={onStart}>
+                        診断スタート →
+                    </button>
+                </div>
+            );
+        }
+
+        function QuestionScreen({ question, qNumber, totalQ, onAnswer, onBack }) {
+            const progress = (qNumber / totalQ) * 100;
+
+            return (
+                <div style={styles.qWrap}>
+                    <div style={styles.progressTrack}>
+                        <div style={{ ...styles.progressBar, width: `${progress}%` }} />
+                    </div>
+                    <div style={styles.qNumRow}>
+                        <span style={styles.qNum}>Q{qNumber}</span>
+                        <span style={styles.qTotal}>/ {totalQ}</span>
+                    </div>
+                    <div style={styles.qTextBox}>
+                        <p style={styles.qText}>
+                            {question.text.split("\n").map((line, i) => (
+                                <span key={i}>
+                                    {line}
+                                    {i < question.text.split("\n").length - 1 && <br />}
+                                </span>
+                            ))}
+                        </p>
+                    </div>
+                    <div style={styles.answerRow}>
+                        <button style={{ ...styles.answerBtn, ...styles.answerYes }} onClick={() => onAnswer("yes")}>
+                            <span style={styles.answerIcon}>✓</span>
+                            はい
+                        </button>
+                        <button style={{ ...styles.answerBtn, ...styles.answerNo }} onClick={() => onAnswer("no")}>
+                            <span style={styles.answerIcon}>✗</span>
+                            いいえ
+                        </button>
+                    </div>
+                    {onBack && (
+                        <button style={styles.backBtn} onClick={onBack}>
+                            ← 前の質問に戻る
+                        </button>
+                    )}
+                </div>
+            );
+        }
+
+        function ResultScreen({ result, onRestart }) {
+            const grad = `linear-gradient(135deg, ${result.from}, ${result.to})`;
+
+            return (
+                <div style={styles.rWrap}>
+                    <div style={{ ...styles.rHero, background: grad }}>
+                        <div style={styles.rHeroLabel}>あなたのタイプは…</div>
+                        <div style={styles.rEmoji}>{result.emoji}</div>
+                        <div style={styles.rName}>{result.name}</div>
+                        <div style={styles.rTypeName}>{result.type}</div>
+                        <div style={styles.rKeywordsRow}>
+                            {result.keywords.split(" × ").map((k, i) => (
+                                <span
+                                    key={i}
+                                    style={{
+                                        ...styles.rKeywordChip,
+                                        background: "rgba(255,255,255,0.18)",
+                                        color: "#fff",
+                                    }}
+                                >
+                                    {k}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <div style={styles.rCatch}>「{result.catchcopy}」</div>
+                    <p style={styles.rDesc}>{result.desc}</p>
+                    <button style={styles.restartBtn} onClick={onRestart}>
+                        もう一度診断する
+                    </button>
+                </div>
+            );
+        }
+
+        // ── スタイル定義 ──────────────────────────────────────
+
+        const GOLD = "#c9a84c";
+        const TEXT = "#e8d5b7";
+        const TEXT_MUTED = "#9a8c7a";
+
+        const styles = {
+            root: {
+                minHeight: "100vh",
+                background: "radial-gradient(ellipse at top, #1a1a3e 0%, #0a0a1a 60%)",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "center",
+                padding: "24px 16px 48px",
+                fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', 'Georgia', serif",
+                position: "relative",
+                overflow: "hidden",
+                color: TEXT,
+            },
+            bgDecor1: {
+                position: "fixed",
+                top: "-20%",
+                right: "-10%",
+                width: "500px",
+                height: "500px",
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)",
+                pointerEvents: "none",
+            },
+            bgDecor2: {
+                position: "fixed",
+                bottom: "-20%",
+                left: "-10%",
+                width: "400px",
+                height: "400px",
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(100,50,180,0.1) 0%, transparent 70%)",
+                pointerEvents: "none",
+            },
+            container: {
+                width: "100%",
+                maxWidth: "520px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+                position: "relative",
+                zIndex: 1,
+            },
+            header: {
+                textAlign: "center",
+                padding: "8px 0",
+            },
+            headerBadge: {
+                display: "inline-block",
+                background: `linear-gradient(90deg, ${GOLD}, #e8c96a, ${GOLD})`,
+                color: "#1a1200",
+                fontSize: "11px",
+                fontWeight: "700",
+                letterSpacing: "0.12em",
+                padding: "3px 14px",
+                borderRadius: "20px",
+                marginBottom: "10px",
+                fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif",
+            },
+            title: {
+                fontSize: "clamp(22px, 6vw, 32px)",
+                fontWeight: "700",
+                color: "#fff",
+                lineHeight: 1.4,
+                margin: "0 0 6px",
+                letterSpacing: "0.05em",
+            },
+            titleSub: {
+                fontSize: "0.55em",
+                color: GOLD,
+                fontWeight: "400",
+                letterSpacing: "0.2em",
+            },
+            titleMain: {
+                fontSize: "0.6em",
+                color: GOLD,
+                letterSpacing: "0.18em",
+            },
+            headerNote: {
+                fontSize: "10px",
+                color: TEXT_MUTED,
+                margin: "6px 0 0",
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            card: {
+                background: "rgba(15,52,96,0.7)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(201,168,76,0.25)",
+                borderRadius: "20px",
+                overflow: "hidden",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+            },
+            footer: {
+                textAlign: "center",
+                fontSize: "10px",
+                color: TEXT_MUTED,
+                lineHeight: 1.6,
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            startWrap: {
+                padding: "44px 32px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "16px",
+            },
+            startSymbol: {
+                fontSize: "52px",
+                filter: "drop-shadow(0 0 20px rgba(201,168,76,0.6))",
+            },
+            startHeading: {
+                fontSize: "clamp(18px, 5vw, 24px)",
+                fontWeight: "700",
+                color: "#fff",
+                textAlign: "center",
+                margin: 0,
+                lineHeight: 1.5,
+            },
+            startDesc: {
+                fontSize: "14px",
+                color: TEXT,
+                textAlign: "center",
+                lineHeight: 1.8,
+                margin: 0,
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            startCharacters: {
+                display: "flex",
+                gap: "8px",
+                flexWrap: "wrap",
+                justifyContent: "center",
+            },
+            startEmoji: {
+                fontSize: "28px",
+                opacity: 0.85,
+            },
+            startBtn: {
+                marginTop: "8px",
+                background: `linear-gradient(135deg, ${GOLD}, #e8c96a)`,
+                color: "#1a1200",
+                border: "none",
+                borderRadius: "50px",
+                padding: "14px 48px",
+                fontSize: "17px",
+                fontWeight: "700",
+                cursor: "pointer",
+                letterSpacing: "0.08em",
+                boxShadow: `0 4px 24px rgba(201,168,76,0.4)`,
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            qWrap: {
+                padding: "28px 28px 36px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+            },
+            progressTrack: {
+                height: "3px",
+                background: "rgba(255,255,255,0.1)",
+                borderRadius: "2px",
+                overflow: "hidden",
+            },
+            progressBar: {
+                height: "100%",
+                background: `linear-gradient(90deg, ${GOLD}, #e8c96a)`,
+                borderRadius: "2px",
+                transition: "width 0.4s ease",
+            },
+            qNumRow: {
+                display: "flex",
+                alignItems: "baseline",
+                gap: "4px",
+            },
+            qNum: {
+                fontSize: "30px",
+                fontWeight: "700",
+                color: GOLD,
+                lineHeight: 1,
+            },
+            qTotal: {
+                fontSize: "13px",
+                color: TEXT_MUTED,
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            qTextBox: {
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(201,168,76,0.2)",
+                borderRadius: "14px",
+                padding: "24px 20px",
+                minHeight: "110px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+            },
+            qText: {
+                fontSize: "clamp(15px, 4vw, 19px)",
+                color: "#fff",
+                textAlign: "center",
+                lineHeight: 1.8,
+                margin: 0,
+                letterSpacing: "0.03em",
+            },
+            answerRow: {
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+            },
+            answerBtn: {
+                border: "none",
+                borderRadius: "12px",
+                padding: "16px 12px",
+                fontSize: "17px",
+                fontWeight: "700",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                letterSpacing: "0.05em",
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            answerYes: {
+                background: "linear-gradient(135deg, #1e6b3a, #27ae60)",
+                color: "#fff",
+                boxShadow: "0 4px 16px rgba(39,174,96,0.3)",
+            },
+            answerNo: {
+                background: "linear-gradient(135deg, #6b1e1e, #c0392b)",
+                color: "#fff",
+                boxShadow: "0 4px 16px rgba(192,57,43,0.3)",
+            },
+            answerIcon: {
+                fontSize: "18px",
+            },
+            backBtn: {
+                background: "transparent",
+                border: "none",
+                color: TEXT_MUTED,
+                fontSize: "13px",
+                cursor: "pointer",
+                textAlign: "center",
+                padding: "4px",
+                fontFamily: "'Hiragino Sans', sans-serif",
+                letterSpacing: "0.04em",
+            },
+            rWrap: {
+                display: "flex",
+                flexDirection: "column",
+                gap: "0",
+            },
+            rHero: {
+                padding: "36px 28px 28px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "8px",
+            },
+            rHeroLabel: {
+                fontSize: "12px",
+                color: "rgba(255,255,255,0.7)",
+                letterSpacing: "0.15em",
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            rEmoji: {
+                fontSize: "64px",
+                filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.4))",
+                lineHeight: 1.1,
+            },
+            rName: {
+                fontSize: "36px",
+                fontWeight: "700",
+                color: "#fff",
+                letterSpacing: "0.1em",
+                textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            },
+            rTypeName: {
+                fontSize: "13px",
+                color: "rgba(255,255,255,0.75)",
+                letterSpacing: "0.12em",
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            rKeywordsRow: {
+                display: "flex",
+                gap: "6px",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                marginTop: "4px",
+            },
+            rKeywordChip: {
+                fontSize: "11px",
+                padding: "3px 10px",
+                borderRadius: "20px",
+                letterSpacing: "0.06em",
+                fontFamily: "'Hiragino Sans', sans-serif",
+                fontWeight: "600",
+            },
+            rCatch: {
+                textAlign: "center",
+                fontSize: "clamp(14px, 3.5vw, 17px)",
+                color: GOLD,
+                fontWeight: "600",
+                padding: "20px 24px 8px",
+                letterSpacing: "0.05em",
+            },
+            rDesc: {
+                fontSize: "14px",
+                color: TEXT,
+                lineHeight: 1.9,
+                padding: "0 28px 28px",
+                margin: 0,
+                textAlign: "center",
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+            restartBtn: {
+                margin: "0 28px 32px",
+                background: "transparent",
+                border: `1px solid ${GOLD}`,
+                color: GOLD,
+                borderRadius: "50px",
+                padding: "12px 32px",
+                fontSize: "14px",
+                cursor: "pointer",
+                letterSpacing: "0.1em",
+                fontFamily: "'Hiragino Sans', sans-serif",
+            },
+        };
+
+        // アニメーション
+        const style = document.createElement("style");
+        style.textContent = `
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); opacity: 0.85; }
+                50% { transform: translateY(-8px); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // レンダリング
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<HoushinShindan />);
+    </script>
+</body>
+</html>
